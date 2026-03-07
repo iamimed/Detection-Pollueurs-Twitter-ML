@@ -1,0 +1,90 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score, roc_curve
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import (BaggingClassifier, AdaBoostClassifier, 
+                              GradientBoostingClassifier, RandomForestClassifier)
+from xgboost import XGBClassifier
+from sklearn.naive_bayes import GaussianNB
+
+def run_imbalanced_analysis(filepath="dataset_final_pret.csv"):
+    # 1. Création du sous-ensemble déséquilibré (5% de pollueurs)
+    df = pd.read_csv(filepath)
+    df_legit = df[df['Label'] == 0]
+    df_polluters = df[df['Label'] == 1]
+    
+    # Calcul exact des 5%
+    n_target = int(len(df_legit) * 0.05)
+    print(f"Création du dataset déséquilibré : {len(df_legit)} légitimes et {n_target} pollueurs (5%).")
+    
+    # Échantillonnage aléatoire des pollueurs
+    df_polluters_sampled = df_polluters.sample(n=n_target, random_state=42)
+    
+    # Fusion et mélange (shuffle)
+    df_imb = pd.concat([df_legit, df_polluters_sampled]).sample(frac=1, random_state=42)
+    
+    # 2. Préparation pour l'apprentissage
+    X = df_imb.drop(columns=['UserID', 'CreatedAt', 'CollectedAt', 'Label'], errors='ignore')
+    y = df_imb['Label']
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+
+    # 3. Entraînement des 7 modèles (Identique à la Tâche 3)
+    models = {
+        "Arbre de décision": DecisionTreeClassifier(random_state=42),
+        "Bagging": BaggingClassifier(random_state=42),
+        "AdaBoost": AdaBoostClassifier(random_state=42),
+        "GBoost": GradientBoostingClassifier(random_state=42),
+        "XGBoost": XGBClassifier(eval_metric='logloss', random_state=42),
+        "Forêts aléatoires": RandomForestClassifier(random_state=42),
+        "Bayésien Naïf": GaussianNB()
+    }
+
+    results = []
+    plt.figure(figsize=(10, 8))
+
+    for name, model in models.items():
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        y_proba = model.predict_proba(X_test)[:, 1] 
+        
+        tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+        
+        # Ajout d'une sécurité au cas où TP+FN = 0 pour un très mauvais modèle
+        tp_rate = tp / (tp + fn) if (tp + fn) > 0 else 0
+        fp_rate = fp / (fp + tn) if (fp + tn) > 0 else 0
+        f_measure = f1_score(y_test, y_pred, zero_division=0)
+        auc = roc_auc_score(y_test, y_proba)
+        
+        results.append({
+            "Algorithme": name,
+            "TP Rate (Pollueurs)": round(tp_rate, 4),
+            "FP Rate (Pollueurs)": round(fp_rate, 4),
+            "F-Mesure": round(f_measure, 4),
+            "AUC": round(auc, 4)
+        })
+        
+        fpr_curve, tpr_curve, _ = roc_curve(y_test, y_proba)
+        plt.plot(fpr_curve, tpr_curve, label=f"{name} (AUC = {auc:.3f})")
+
+    # 4. Affichage et sauvegarde
+    df_results = pd.DataFrame(results)
+    print("\n=== RÉSULTATS (DONNÉES DÉSÉQUILIBRÉES 5%) ===")
+    try:
+        print(df_results.to_markdown(index=False))
+    except ImportError:
+        print(df_results.to_string(index=False))
+        
+    plt.plot([0, 1], [0, 1], 'k--', label='Aléatoire (AUC = 0.5)')
+    plt.xlabel('Taux de Faux Positifs (FP Rate)')
+    plt.ylabel('Taux de Vrais Positifs (TP Rate)')
+    plt.title('Courbes ROC (Classes Déséquilibrées - 5% Pollueurs)')
+    plt.legend(loc="lower right")
+    plt.grid(alpha=0.3)
+    plt.savefig("courbe_roc_imbalanced.png", dpi=300, bbox_inches='tight')
+    print("\nGraphique ROC sauvegardé sous 'courbe_roc_imbalanced.png'")
+
+if __name__ == "__main__":
+    run_imbalanced_analysis()

@@ -1,0 +1,40 @@
+# =========================
+# 1. Fichiers de Données (ML)
+# =========================
+# On ignore les gros fichiers CSV générés pour ne pas surcharger GitHub
+*.csv
+# (Optionnel : si tu as des fichiers .txt avec tes données brutes)
+*.txt 
+
+# =========================
+# 2. Environnements Python
+# =========================
+# On ignore le dossier de ton environnement virtuel
+.venv/
+venv/
+env/
+
+# =========================
+# 3. Fichiers Cache Python
+# =========================
+# Fichiers temporaires créés automatiquement par Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# 4. Fichiers VS Code & Système
+# =========================
+# Configurations locales de ton éditeur
+.vscode/
+
+# Fichiers invisibles de Windows/Mac
+Thumbs.db
+.DS_Store
+# ==========================================
+# 5. RÈGLES SPÉCIFIQUES AU PROJET
+# ==========================================
+# Ignorer les gros fichiers de données pour ne pas bloquer l'envoi vers GitHub
+*.csv
+*.txt
