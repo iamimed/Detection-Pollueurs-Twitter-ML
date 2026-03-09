@@ -38,3 +38,4 @@ Thumbs.db
 # Ignorer les gros fichiers de données pour ne pas bloquer l'envoi vers GitHub
 *.csv
 *.txt
+*.pdf

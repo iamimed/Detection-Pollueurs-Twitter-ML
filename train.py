@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score, roc_curve
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 # Importation des 7 algorithmes
 from sklearn.tree import DecisionTreeClassifier
@@ -112,5 +114,39 @@ def run_comparative_analysis(filepath="dataset_final_pret.csv"):
     # Graphique Importance des Features (via Random Forest)
     plot_feature_importance(models["Forêts aléatoires"], X.columns)
 
+    # 5. Génération des matrices de confusion comparatives
+
+    print("\n Génération des matrices de confusion...")
+
+    # On crée une grande image avec une grille (3 lignes, 3 colonnes) pour nos 7 modèles
+    fig, axes = plt.subplots(3, 3, figsize=(15, 12))
+    axes = axes.flatten() # Pour pouvoir boucler dessus facilement
+
+    # On refait une petite boucle sur nos modèles déjà entraînés
+    for idx, (name, model) in enumerate(models.items()):
+        # On récupère les prédictions
+        y_pred = model.predict(X_test)
+        cm = confusion_matrix(y_test, y_pred)
+    
+         # On dessine la matrice avec Seaborn (couleurs bleues, avec les vrais chiffres 'd')
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=axes[idx],
+                xticklabels=['Légitime (0)', 'Pollueur (1)'], 
+                yticklabels=['Légitime (0)', 'Pollueur (1)'])
+    
+        axes[idx].set_title(f'{name}')
+        axes[idx].set_xlabel('Prédiction du modèle')
+        axes[idx].set_ylabel('Vraie classe')
+
+    # Comme on a 7 modèles mais 9 cases (3x3), on efface les 2 cases vides à la fin
+    for i in range(7, 9):
+        fig.delaxes(axes[i])
+
+    # On ajuste l'espacement pour que ce soit joli et on sauvegarde
+    plt.tight_layout()
+    plt.savefig("matrices_confusion_comparatives.png", dpi=300, bbox_inches='tight')
+    print(" Graphique des matrices sauvegardé sous 'matrices_confusion_comparatives.png'")
+
+   
+    
 if __name__ == "__main__":
     run_comparative_analysis()

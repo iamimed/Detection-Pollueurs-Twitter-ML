@@ -23,13 +23,16 @@ if __name__ == "__main__":
     # Étape 1 : Extraction des données (main.py utilise Features.py en interne)
     run_script("main.py")
     
-    # Étape 2 : Nettoyage et Normalisation
+    # Étape 2 : Extraction des caractéristiques (Features.py)
+    run_script("features.py")
+
+    # Étape 3 : Nettoyage et Normalisation
     run_script("preprocessing.py")
     
-    # Étape 3 : Entraînement des modèles et Graphiques
+    # Étape 4 : Entraînement des modèles et Graphiques
     run_script("train.py")
         
-    # Étape 4 : Entraînement des modèles (Déséquilibré 5%)
+    # Étape 5 : Entraînement des modèles (Déséquilibré 5%)
     run_script("train_imbalanced.py") 
     
     print("\n PIPELINE COMPLET ! Tous les CSV et graphiques sont à jour.")
